@@ -54,7 +54,7 @@ namespace FakeEventBus.EditModeTests
             var observer = new ObserverWithoutCallback();
             eventBus.Register(observer);
 
-            Assert.That(eventBus.ActiveObserverCount, Is.EqualTo(0));
+            Assert.That(eventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         /// <summary>
@@ -70,7 +70,7 @@ namespace FakeEventBus.EditModeTests
             var observer = new OneInvalidCallbackStub();
 
             Assert.Throws<InvalidCallbackException>(() => eventBus.Register(observer));
-            Assert.That(eventBus.ActiveObserverCount, Is.EqualTo(0));
+            Assert.That(eventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         /// <summary>
@@ -85,7 +85,7 @@ namespace FakeEventBus.EditModeTests
             var observer = new OnePublicCallbackStub();
             eventBus.Register(observer);
 
-            Assert.That(eventBus.ActiveObserverCount, Is.EqualTo(1));
+            Assert.That(eventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
         }
 
         /// <summary>
@@ -100,7 +100,7 @@ namespace FakeEventBus.EditModeTests
             var observer = new OnePrivateCallbackStub();
             eventBus.Register(observer);
 
-            Assert.That(eventBus.ActiveObserverCount, Is.EqualTo(1));
+            Assert.That(eventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
         }
 
         /// <summary>
@@ -115,11 +115,11 @@ namespace FakeEventBus.EditModeTests
             var observer = new OneCallbackStub();
             eventBus.Register(observer);
 
-            Assert.That(eventBus.ActiveObserverCount, Is.EqualTo(1));
+            Assert.That(eventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
 
             eventBus.Unregister(observer);
             
-            Assert.That(eventBus.ActiveObserverCount, Is.EqualTo(0));
+            Assert.That(eventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         /// <summary>

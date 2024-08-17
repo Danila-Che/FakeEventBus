@@ -6,83 +6,135 @@ namespace FakeEventBus
 {
     public class EventBus : IEventBus
     {
+        private class ObserverBindings
+        {
+            private readonly Type m_EventArgsType;
+            private readonly List<Delegate> m_Callbacks;
+
+            public ObserverBindings(Type eventArgsType)
+            {
+                m_EventArgsType = eventArgsType;
+                m_Callbacks = new List<Delegate>();
+            }
+
+            public int CallbackCount => m_Callbacks.Count;
+
+            public void Add(Delegate callback)
+            {
+                m_Callbacks.Add(callback);
+            }
+
+            public void Remove(object observer)
+            {
+                m_Callbacks.RemoveAll(callback => callback.Target == observer);
+            }
+
+            public void Invoke<T>(T args)
+                where T : EventArgs
+            {
+                m_Callbacks.ForEach(callback => ((Action<T>)callback).Invoke(args));
+            }
+        }
+
         private const BindingFlags k_Binding = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
 
-        private readonly List<object> m_Observers;
-        private readonly Dictionary<Type, object> m_EventBindings; // Type is event type inhereted from EventArgs
-        private readonly Dictionary<Type, MethodInfo> m_ObserversCache;
+        private readonly Dictionary<Type, ObserverBindings> m_ObserverBindings; // Type is event args type
 
         public EventBus()
         {
-            m_Observers = new List<object>();
-            m_EventBindings = new Dictionary<Type, object>();
-            m_ObserversCache = new Dictionary<Type, MethodInfo>();
+            m_ObserverBindings = new Dictionary<Type, ObserverBindings>();
         }
 
-        public int ActiveObserverCount => m_Observers.Count;
+        public int GetActiveObserverCount<T>()
+            where T : EventArgs
+        {
+            if (m_ObserverBindings.TryGetValue(typeof(T), out var bindings))
+            {
+                return bindings.CallbackCount;
+            }
+
+            return 0;
+        }
 
         public void Register(object observer)
         {
-            var allMethodInfo = observer.GetType().GetMethods(k_Binding);
-            var isObserver = false;
+            var methods = observer.GetType().GetMethods(k_Binding);
 
-            foreach (var methodInfo in allMethodInfo)
+            foreach (var methodInfo in methods)
             {
-                if (IsValidCallback(methodInfo))
+                if (TryGetEventArgsType(methodInfo, out Type eventArgsType))
                 {
-                    isObserver = true;
-
-                    var eventArgsType = methodInfo.GetParameters()[0].ParameterType;
-                    _ = m_EventBindings.TryAdd(eventArgsType, observer);
-                    _ = m_ObserversCache.TryAdd(observer.GetType(), methodInfo);
+                    AddCallback(methodInfo, eventArgsType, observer);
                 }
-            }
-
-            if (isObserver)
-            {
-                m_Observers.Add(observer);
             }
         }
 
         public void Unregister(object observer)
         {
-            m_Observers.Remove(observer);
+            foreach (var binding in m_ObserverBindings)
+            {
+                binding.Value.Remove(observer);
+            }
         }
 
         public void Notify<T>(T eventArgs)
             where T : EventArgs
         {
-            if (m_EventBindings.TryGetValue(typeof(T), out var observer))
+            if (m_ObserverBindings.TryGetValue(typeof(T), out var bindings))
             {
-                if (m_ObserversCache.TryGetValue(observer.GetType(), out var callback))
-                {
-                    callback.Invoke(observer, new object[] { eventArgs });
-                }
+                bindings.Invoke(eventArgs);
             }
         }
 
-        private bool IsValidCallback(MethodInfo methodInfo)
+        private bool TryGetEventArgsType(MethodInfo methodInfo, out Type eventArgsType)
         {
-            var attributes = methodInfo.GetCustomAttribute<ObserveEventAttribute>();
-
-            if (attributes is not null)
+            if (HasValidAttribute(methodInfo))
             {
-                return HasValidParameter(methodInfo);
+                var parameters = methodInfo.GetParameters();
+
+                if (parameters.Length == 1 && typeof(EventArgs).IsAssignableFrom(parameters[0].ParameterType))
+                {
+                    eventArgsType = parameters[0].ParameterType;
+                    return true;
+                }
+                else
+                {
+                    throw new InvalidCallbackException($"The callback {methodInfo.Name} of {methodInfo.DeclaringType.Name} must contain only one parameter inheriting from the {typeof(EventArgs).Name} type");
+                }
             }
 
+            eventArgsType = default;
             return false;
         }
 
-        private bool HasValidParameter(MethodInfo methodInfo)
+        private bool HasValidAttribute(MethodInfo methodInfo)
         {
-            var parameters = methodInfo.GetParameters();
+            var attributes = methodInfo.GetCustomAttribute<ObserveEventAttribute>();
 
-            if (parameters.Length == 1 && parameters[0].ParameterType.IsSubclassOf(typeof(EventArgs)))
+            return attributes is not null;
+        }
+
+        private void AddCallback(MethodInfo methodInfo, Type eventArgsType, object observer)
+        {
+            var callback = CreateDelegate(methodInfo, eventArgsType, observer);
+
+            if (m_ObserverBindings.TryGetValue(eventArgsType, out var observerBindings))
             {
-                return true;
+                observerBindings.Add(callback);
             }
+            else
+            {
+                var observerBinding = new ObserverBindings(eventArgsType);
+                observerBinding.Add(callback);
+                m_ObserverBindings[eventArgsType] = observerBinding;
+            }
+        }
 
-            throw new InvalidCallbackException($"The callback {methodInfo.Name} of {methodInfo.DeclaringType.Name} must contain only one parameter inheriting from the {typeof(EventArgs).Name} type");
+        private Delegate CreateDelegate(MethodInfo methodInfo, Type genericType, object target)
+        {
+            var delegateType = typeof(Action<>).MakeGenericType(genericType);
+
+            return methodInfo.CreateDelegate(delegateType, target);
         }
     }
 }
