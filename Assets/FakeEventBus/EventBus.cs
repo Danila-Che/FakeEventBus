@@ -29,6 +29,19 @@ namespace FakeEventBus
                 m_Callbacks.RemoveAll(callback => callback.Target == observer);
             }
 
+            public bool Contains(MethodInfo methodInfo)
+            {
+                foreach (var callback in m_Callbacks)
+                {
+                    if (callback.Method == methodInfo)
+                    {
+                        return true;
+                    }
+                }
+
+                return false;
+            }
+
             public void Invoke<T>(T args)
                 where T : EventArgs
             {
@@ -36,7 +49,10 @@ namespace FakeEventBus
             }
         }
 
-        private const BindingFlags k_Binding = BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance;
+        private const BindingFlags k_Scope =
+            BindingFlags.NonPublic |
+            BindingFlags.Public |
+            BindingFlags.Instance;
 
         private readonly Dictionary<Type, ObserverBindings> m_ObserverBindings; // Type is event args type
 
@@ -58,15 +74,7 @@ namespace FakeEventBus
 
         public void Register(object observer)
         {
-            var methods = observer.GetType().GetMethods(k_Binding);
-
-            foreach (var methodInfo in methods)
-            {
-                if (TryGetEventArgsType(methodInfo, out Type eventArgsType))
-                {
-                    AddCallback(methodInfo, eventArgsType, observer);
-                }
-            }
+            Generate(observer.GetType(), observer);
         }
 
         public void Unregister(object observer)
@@ -86,21 +94,44 @@ namespace FakeEventBus
             }
         }
 
+        private void Generate(Type type, object observer)
+        {
+            var methods = type.GetMethods(k_Scope);
+
+            foreach (var methodInfo in methods)
+            {
+                if (TryGetEventArgsType(methodInfo, out Type eventArgsType))
+                {
+                    if (m_ObserverBindings.TryGetValue(eventArgsType, out var bindings))
+                    {
+                        if (bindings.Contains(methodInfo) is false)
+                        {
+                            AddCallback(methodInfo, eventArgsType, observer);
+                        }
+                    }
+                    else
+                    {
+                        AddCallback(methodInfo, eventArgsType, observer);
+                    }
+                }
+            }
+
+            if (type.BaseType != null)
+            {
+                Generate(type.BaseType, observer);
+            }
+        }
+
         private bool TryGetEventArgsType(MethodInfo methodInfo, out Type eventArgsType)
         {
             if (HasValidAttribute(methodInfo))
             {
-                var parameters = methodInfo.GetParameters();
-
-                if (parameters.Length == 1 && typeof(EventArgs).IsAssignableFrom(parameters[0].ParameterType))
+                if (HasValidParameter(methodInfo, out eventArgsType))
                 {
-                    eventArgsType = parameters[0].ParameterType;
                     return true;
                 }
-                else
-                {
-                    throw new InvalidCallbackException($"The callback {methodInfo.Name} of {methodInfo.DeclaringType.Name} must contain only one parameter inheriting from the {typeof(EventArgs).Name} type");
-                }
+
+                throw new InvalidCallbackException($"The callback {methodInfo.Name} of {methodInfo.DeclaringType.Name} must contain only one parameter inheriting from the {typeof(EventArgs).Name} type");
             }
 
             eventArgsType = default;
@@ -109,9 +140,23 @@ namespace FakeEventBus
 
         private bool HasValidAttribute(MethodInfo methodInfo)
         {
-            var attributes = methodInfo.GetCustomAttribute<ObserveEventAttribute>();
+            var observeEventAttribute = methodInfo.GetCustomAttribute<ObserveEventAttribute>();
 
-            return attributes is not null;
+            return observeEventAttribute is not null;
+        }
+
+        private bool HasValidParameter(MethodInfo methodInfo, out Type eventArgsType)
+        {
+            var parameters = methodInfo.GetParameters();
+
+            if (parameters.Length == 1)
+            {
+                eventArgsType = parameters[0].ParameterType;
+                return typeof(EventArgs).IsAssignableFrom(parameters[0].ParameterType);
+            }
+
+            eventArgsType = default;
+            return false;
         }
 
         private void AddCallback(MethodInfo methodInfo, Type eventArgsType, object observer)
