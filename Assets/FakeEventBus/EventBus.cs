@@ -72,6 +72,11 @@ namespace FakeEventBus
             return 0;
         }
 
+        public void Clear()
+        {
+            m_ObserverBindings.Clear();
+        }
+
         public void Register(object observer)
         {
             Generate(observer.GetType(), observer);

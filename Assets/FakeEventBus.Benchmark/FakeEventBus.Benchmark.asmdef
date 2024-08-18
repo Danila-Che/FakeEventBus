@@ -1,0 +1,16 @@
+{
+    "name": "FakeEventBus.Benchmark",
+    "rootNamespace": "FakeEventBus.Benchmark",
+    "references": [
+        "GUID:4d72e2c4f13dbef46845448ca86de1ba"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": false,
+    "precompiledReferences": [],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}
