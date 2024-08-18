@@ -29,11 +29,11 @@ namespace FakeEventBus
                 m_Callbacks.RemoveAll(callback => callback.Target == observer);
             }
 
-            public bool Contains(MethodInfo methodInfo)
+            public bool Contains(MethodInfo methodInfo, object observer)
             {
                 foreach (var callback in m_Callbacks)
                 {
-                    if (callback.Method == methodInfo)
+                    if (callback.Method == methodInfo && callback.Target == observer)
                     {
                         return true;
                     }
@@ -109,7 +109,7 @@ namespace FakeEventBus
                 {
                     if (m_ObserverBindings.TryGetValue(eventArgsType, out var bindings))
                     {
-                        if (bindings.Contains(methodInfo) is false)
+                        if (bindings.Contains(methodInfo, observer) is false)
                         {
                             AddCallback(methodInfo, eventArgsType, observer);
                         }
