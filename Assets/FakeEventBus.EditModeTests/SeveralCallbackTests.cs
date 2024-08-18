@@ -46,6 +46,15 @@ namespace FakeEventBus.EditModeTests
             }
         }
 
+        private class ObserverWithValidAndOneInvalidCallback
+        {
+            [ObserveEvent]
+            public void FirstCallback(FirstEventArgsStub validArgs) { }
+
+            [ObserveEvent]
+            public void SecondCallback(int invalidArgs) { }
+        }
+
         [Test]
         public void Test_NotifyObserverWithIdenticalCallbacks()
         {
@@ -81,6 +90,23 @@ namespace FakeEventBus.EditModeTests
 
             Assert.That(observer.FirstCallbackCount, Is.EqualTo(1));
             Assert.That(observer.SecondCallbackCount, Is.EqualTo(1));
+        }
+
+        /// <summary>
+        /// Given an event bus without a observer
+        /// When a invalid callback observer tries to register on the event bus
+        /// Then the event bus throws an exeption
+        /// And the event bus still has no observer
+        /// </summary>
+        [Test]
+        public void Test_TryRegisterObserverWithInvalidCallback()
+        {
+            var eventBus = new EventBus();
+            var observer = new ObserverWithValidAndOneInvalidCallback();
+
+            Assert.Throws<InvalidCallbackException>(() => eventBus.Register(observer));
+            Assert.That(eventBus.GetActiveObserverCount<FirstEventArgsStub>(), Is.EqualTo(0));
+            Assert.That(eventBus.GetActiveObserverCount<SecondsEventArgsStub>(), Is.EqualTo(0));
         }
     }
 }
