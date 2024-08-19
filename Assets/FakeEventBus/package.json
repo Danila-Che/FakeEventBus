@@ -1,0 +1,11 @@
+{
+    "name": "com.danilache.fakeeventbus",
+    "displayName": "Fake Event Bus",
+    "version": "1.0.0",
+    "unity": "2019.1",
+    "description": "Minimal event bus for Unity",
+    "keywords": ["EventBus", "Event bus", "Event", "Event-bus", "Observer", "messenger"],
+    "license": "MIT",
+    "documentationUrl": "https://github.com/Danila-Che/FakeEventBus",
+    "licensesUrl": "https://github.com/Danila-Che/FakeEventBus?tab=MIT-1-ov-file"
+}
