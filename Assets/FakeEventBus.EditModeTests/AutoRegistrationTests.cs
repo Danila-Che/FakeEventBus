@@ -26,13 +26,13 @@ namespace FakeEventBus.EditModeTests
             var observerGameObject = new GameObject();
             _ = observerGameObject.AddComponent<Observer>();
 
-            EventBusDecorator.Clear();
+            EventBusProxy.Clear();
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
 
-            EventBusDecorator.RegisterSingle(observerGameObject);
+            EventBusProxy.RegisterSingle(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -43,13 +43,13 @@ namespace FakeEventBus.EditModeTests
             _ = observerGameObject.AddComponent<Observer>();
             _ = observerGameObject.AddComponent<Observer>();
 
-            EventBusDecorator.Clear();
+            EventBusProxy.Clear();
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
 
-            EventBusDecorator.RegisterObject(observerGameObject);
+            EventBusProxy.RegisterObject(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -63,13 +63,13 @@ namespace FakeEventBus.EditModeTests
             _ = observerGameObject.AddComponent<Observer>();
             _ = nestedGameObject.AddComponent<Observer>();
 
-            EventBusDecorator.Clear();
+            EventBusProxy.Clear();
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
 
-            EventBusDecorator.RegisterRecursive(observerGameObject);
+            EventBusProxy.RegisterRecursive(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -78,14 +78,14 @@ namespace FakeEventBus.EditModeTests
             var observerGameObject = new GameObject();
             _ = observerGameObject.AddComponent<Observer>();
 
-            EventBusDecorator.Clear();
-            EventBusDecorator.RegisterRecursive(observerGameObject);
+            EventBusProxy.Clear();
+            EventBusProxy.RegisterRecursive(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
 
-            EventBusDecorator.UnregisterSingle(observerGameObject);
+            EventBusProxy.UnregisterSingle(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         [Test]
@@ -96,14 +96,14 @@ namespace FakeEventBus.EditModeTests
             _ = observerGameObject.AddComponent<Observer>();
             _ = observerGameObject.AddComponent<Observer>();
 
-            EventBusDecorator.Clear();
-            EventBusDecorator.RegisterObject(observerGameObject);
+            EventBusProxy.Clear();
+            EventBusProxy.RegisterObject(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
 
-            EventBusDecorator.UnregisterObject(observerGameObject);
+            EventBusProxy.UnregisterObject(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         [Test]
@@ -117,14 +117,14 @@ namespace FakeEventBus.EditModeTests
             _ = observerGameObject.AddComponent<Observer>();
             _ = nestedGameObject.AddComponent<Observer>();
 
-            EventBusDecorator.Clear();
-            EventBusDecorator.RegisterRecursive(observerGameObject);
+            EventBusProxy.Clear();
+            EventBusProxy.RegisterRecursive(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
 
-            EventBusDecorator.UnregisterRecursive(observerGameObject);
+            EventBusProxy.UnregisterRecursive(observerGameObject);
 
-            Assert.That(EventBusDecorator.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
     }
 }

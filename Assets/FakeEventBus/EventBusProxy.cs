@@ -4,7 +4,7 @@ using UnityEngine.Pool;
 
 namespace FakeEventBus
 {
-    public sealed class EventBusDecorator
+    public sealed class EventBusProxy
     {
         private static readonly Lazy<EventBus> m_Instance = new(() => new EventBus());
 

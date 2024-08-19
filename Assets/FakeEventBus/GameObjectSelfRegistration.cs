@@ -24,13 +24,13 @@ namespace FakeEventBus
             switch (m_RegistrationStrategy)
             {
                 case RegistrationStrategy.Single:
-                    EventBusDecorator.RegisterSingle(gameObject);
+                    EventBusProxy.RegisterSingle(gameObject);
                     break;
                 case RegistrationStrategy.Object:
-                    EventBusDecorator.RegisterObject(gameObject);
+                    EventBusProxy.RegisterObject(gameObject);
                     break;
                 case RegistrationStrategy.Recursive:
-                    EventBusDecorator.RegisterRecursive(gameObject);
+                    EventBusProxy.RegisterRecursive(gameObject);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
@@ -45,13 +45,13 @@ namespace FakeEventBus
             switch (m_LastRegistrationStrategy)
             {
                 case RegistrationStrategy.Single:
-                    EventBusDecorator.UnregisterSingle(gameObject);
+                    EventBusProxy.UnregisterSingle(gameObject);
                     break;
                 case RegistrationStrategy.Object:
-                    EventBusDecorator.UnregisterObject(gameObject);
+                    EventBusProxy.UnregisterObject(gameObject);
                     break;
                 case RegistrationStrategy.Recursive:
-                    EventBusDecorator.UnregisterRecursive(gameObject);
+                    EventBusProxy.UnregisterRecursive(gameObject);
                     break;
                 default:
                     throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
