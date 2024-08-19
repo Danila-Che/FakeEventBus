@@ -11,11 +11,11 @@ namespace FakeEventBus
             private readonly Type m_EventArgsType;
             private readonly List<Delegate> m_Callbacks;
 
-            public ObserverBindings(Type eventArgsType)
+			public ObserverBindings(Type eventArgsType)
             {
                 m_EventArgsType = eventArgsType;
                 m_Callbacks = new List<Delegate>();
-            }
+			}
 
             public int CallbackCount => m_Callbacks.Count;
 
@@ -50,10 +50,13 @@ namespace FakeEventBus
                 return false;
             }
 
-            public void Invoke<T>(T args)
+            public void Invoke<T>(T arg)
                 where T : EventArgs
             {
-                m_Callbacks.ForEach(callback => ((Action<T>)callback).Invoke(args));
+				for (int i = 0; i < m_Callbacks.Count; i++)
+                {
+					((Action<T>)m_Callbacks[i]).Invoke(arg);
+				}
             }
         }
 
