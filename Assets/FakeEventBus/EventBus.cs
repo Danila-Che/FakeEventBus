@@ -34,8 +34,25 @@ namespace FakeEventBus
 
             public void Remove(object observer)
             {
-                m_Callbacks.RemoveAll(callback => callback.Target == observer);
-            }
+                int index = -1;
+
+                for (int i = 0; i < m_Callbacks.Count; i++)
+                {
+                    if (m_Callbacks[i].Target == observer)
+                    {
+                        index = i;
+                        break;
+                    }
+                }
+
+                if (index != -1)
+                {
+                    m_Callbacks[index] = m_Callbacks[^1];
+					m_Callbacks.RemoveAt(m_Callbacks.Count - 1);
+                }
+
+                //m_Callbacks.RemoveAll(callback => callback.Target == observer);
+			}
 
             public bool Contains(MethodInfo methodInfo, object observer)
             {
