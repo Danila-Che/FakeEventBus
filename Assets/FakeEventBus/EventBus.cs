@@ -8,12 +8,10 @@ namespace FakeEventBus
     {
         private class ObserverBindings
         {
-            private readonly Type m_EventArgsType;
             private readonly List<Delegate> m_Callbacks;
 
-			public ObserverBindings(Type eventArgsType)
+			public ObserverBindings()
             {
-                m_EventArgsType = eventArgsType;
                 m_Callbacks = new List<Delegate>();
 			}
 
@@ -26,13 +24,11 @@ namespace FakeEventBus
 
             public void Add(ObserverBindings bindings)
             {
-                if (m_EventArgsType == bindings.m_EventArgsType)
-                {
-                    m_Callbacks.AddRange(bindings.m_Callbacks);
-                }
+                m_Callbacks.AddRange(bindings.m_Callbacks);
             }
 
-            public void Remove(object observer)
+            public void Remove<T>(T observer)
+                where T : class
             {
                 int index = -1;
 
@@ -50,15 +46,14 @@ namespace FakeEventBus
                     m_Callbacks[index] = m_Callbacks[^1];
 					m_Callbacks.RemoveAt(m_Callbacks.Count - 1);
                 }
-
-                //m_Callbacks.RemoveAll(callback => callback.Target == observer);
 			}
 
-            public bool Contains(MethodInfo methodInfo, object observer)
+            public bool Contains<T>(MethodInfo methodInfo, T observer)
+                where T : class
             {
-                foreach (var callback in m_Callbacks)
+                for (int i = 0; i < m_Callbacks.Count; i++)
                 {
-                    if (callback.Method == methodInfo && callback.Target == observer)
+                    if (m_Callbacks[i].Method == methodInfo && m_Callbacks[i].Target == observer)
                     {
                         return true;
                     }
@@ -67,14 +62,20 @@ namespace FakeEventBus
                 return false;
             }
 
-            public void Invoke<T>(T arg)
+            public void Invoke<T>(T eventArgs)
                 where T : EventArgs
             {
 				for (int i = 0; i < m_Callbacks.Count; i++)
                 {
-					((Action<T>)m_Callbacks[i]).Invoke(arg);
+					((Action<T>)m_Callbacks[i]).Invoke(eventArgs);
 				}
             }
+        }
+
+        private struct CallbackCache
+        {
+            public Type EventArgsType;
+            public MethodInfo MethodInfo;
         }
 
         private const BindingFlags k_Scope =
@@ -83,11 +84,13 @@ namespace FakeEventBus
             BindingFlags.Instance;
 
         private readonly Dictionary<Type, ObserverBindings> m_ObserverBindings; // Type is event args type
+        private readonly Dictionary<Type, List<CallbackCache>> m_ObserverCallbackCache; // Type is observer type
 
         public EventBus()
         {
             m_ObserverBindings = new Dictionary<Type, ObserverBindings>();
-        }
+            m_ObserverCallbackCache = new Dictionary<Type, List<CallbackCache>>();
+		}
 
         public int GetActiveObserverCount<T>()
             where T : EventArgs
@@ -100,28 +103,20 @@ namespace FakeEventBus
             return 0;
         }
 
-        public void Clear()
+        public void Clear(bool includeCache = false)
         {
             m_ObserverBindings.Clear();
-        }
+
+            if (includeCache)
+            {
+                m_ObserverCallbackCache.Clear();
+            }
+		}
 
         public void Register(object observer)
         {
-            var generatedBindings = new Dictionary<Type, ObserverBindings>();
-
-            Generate(observer.GetType(), observer, generatedBindings);
-
-            foreach (var bindings in generatedBindings)
-            {
-                if (m_ObserverBindings.TryGetValue(bindings.Key, out var existedBindings))
-                {
-                    existedBindings.Add(bindings.Value);
-                }
-                else
-                {
-                    m_ObserverBindings[bindings.Key] = bindings.Value;
-                }
-            }
+			CacheIfNecessary(observer);
+			AddObserver(observer);
         }
 
         public void Unregister(object observer)
@@ -141,7 +136,19 @@ namespace FakeEventBus
             }
         }
 
-        private void Generate(Type type, object observer, Dictionary<Type, ObserverBindings> observerBindings)
+        private void CacheIfNecessary(object observer)
+        {
+			if (m_ObserverCallbackCache.ContainsKey(observer.GetType()) is false)
+			{
+				var cache = new List<CallbackCache>();
+
+				Cache(observer.GetType(), cache);
+				m_ObserverCallbackCache.Add(observer.GetType(), cache);
+			}
+		}
+
+        // 7 allocations
+		private void Cache(Type type, List<CallbackCache> eventArgsTypes)
         {
             var methods = type.GetMethods(k_Scope);
 
@@ -149,23 +156,36 @@ namespace FakeEventBus
             {
                 if (TryGetEventArgsType(methodInfo, out Type eventArgsType))
                 {
-                    if (m_ObserverBindings.TryGetValue(eventArgsType, out var bindings))
+                    eventArgsTypes.Add(new CallbackCache
                     {
-                        if (bindings.Contains(methodInfo, observer) is false)
-                        {
-                            AddCallback(methodInfo, eventArgsType, observer, observerBindings);
-                        }
-                    }
-                    else
-                    {
-                        AddCallback(methodInfo, eventArgsType, observer, observerBindings);
-                    }
+                        EventArgsType = eventArgsType,
+                        MethodInfo = methodInfo,
+					});
                 }
             }
 
             if (type.BaseType != null)
             {
-                Generate(type.BaseType, observer, observerBindings);
+                Cache(type.BaseType, eventArgsTypes);
+            }
+        }
+
+        // 10 allocations
+		private void AddObserver(object observer)
+        {
+            foreach (var eventCache in m_ObserverCallbackCache[observer.GetType()])
+            {
+                if (m_ObserverBindings.TryGetValue(eventCache.EventArgsType, out var bindings) is false)
+                {
+					bindings = new ObserverBindings();
+					m_ObserverBindings.Add(eventCache.EventArgsType, bindings);
+				}
+
+                if (bindings.Contains(eventCache.MethodInfo, observer) is false)
+                {
+                    var callback = CreateDelegate(eventCache.MethodInfo, eventCache.EventArgsType, observer);
+                    bindings.Add(callback);
+                }
             }
         }
 
@@ -181,16 +201,14 @@ namespace FakeEventBus
                 throw new InvalidCallbackException($"The callback {methodInfo.Name} of {methodInfo.DeclaringType.Name} must contain only one parameter inheriting from the {typeof(EventArgs).Name} type");
             }
 
-            eventArgsType = default;
+            eventArgsType = null;
             return false;
         }
 
         private bool HasValidAttribute(MethodInfo methodInfo)
         {
-            var observeEventAttribute = methodInfo.GetCustomAttribute<ObserveEventAttribute>();
-
-            return observeEventAttribute is not null;
-        }
+			return methodInfo.IsDefined(typeof(ObserveEventAttribute), inherit: false);
+		}
 
         private bool HasValidParameter(MethodInfo methodInfo, out Type eventArgsType)
         {
@@ -199,27 +217,11 @@ namespace FakeEventBus
             if (parameters.Length == 1)
             {
                 eventArgsType = parameters[0].ParameterType;
-                return typeof(EventArgs).IsAssignableFrom(parameters[0].ParameterType);
+                return typeof(EventArgs).IsAssignableFrom(eventArgsType);
             }
 
             eventArgsType = default;
             return false;
-        }
-
-        private void AddCallback(MethodInfo methodInfo, Type eventArgsType, object observer, Dictionary<Type, ObserverBindings> bindings)
-        {
-            var callback = CreateDelegate(methodInfo, eventArgsType, observer);
-
-            if (bindings.TryGetValue(eventArgsType, out var observerBindings))
-            {
-                observerBindings.Add(callback);
-            }
-            else
-            {
-                var observerBinding = new ObserverBindings(eventArgsType);
-                observerBinding.Add(callback);
-                bindings[eventArgsType] = observerBinding;
-            }
         }
 
         private Delegate CreateDelegate(MethodInfo methodInfo, Type genericType, object target)
