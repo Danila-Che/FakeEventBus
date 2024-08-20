@@ -4,9 +4,15 @@ namespace FakeEventBus
 {
     public interface IEventBus
     {
-        void Register(object observer);
+        int GetActiveObserverCount<T>()
+            where T : EventArgs;
+
+		void Clear(bool includeCache = false);
+
+		void Register(object observer);
         
         void Unregister(object observer);
+
         void Notify<T>(T eventArgs)
             where T : EventArgs;
     }

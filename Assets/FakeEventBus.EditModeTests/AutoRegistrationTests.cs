@@ -28,11 +28,11 @@ namespace FakeEventBus.EditModeTests
 
             EventBusProxy.Clear();
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
 
             EventBusProxy.RegisterSingle(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
         }
 
         [Test]
@@ -45,11 +45,11 @@ namespace FakeEventBus.EditModeTests
 
             EventBusProxy.Clear();
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
 
             EventBusProxy.RegisterObject(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -65,11 +65,11 @@ namespace FakeEventBus.EditModeTests
 
             EventBusProxy.Clear();
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
 
             EventBusProxy.RegisterRecursive(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
         }
 
         [Test]
@@ -81,11 +81,11 @@ namespace FakeEventBus.EditModeTests
             EventBusProxy.Clear();
             EventBusProxy.RegisterRecursive(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(1));
 
             EventBusProxy.UnregisterSingle(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         [Test]
@@ -99,11 +99,11 @@ namespace FakeEventBus.EditModeTests
             EventBusProxy.Clear();
             EventBusProxy.RegisterObject(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
 
             EventBusProxy.UnregisterObject(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
 
         [Test]
@@ -120,11 +120,11 @@ namespace FakeEventBus.EditModeTests
             EventBusProxy.Clear();
             EventBusProxy.RegisterRecursive(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(2));
 
             EventBusProxy.UnregisterRecursive(observerGameObject);
 
-            Assert.That(EventBusProxy.EventBus.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
+            Assert.That(EventBusProxy.GetActiveObserverCount<EventArgsStub>(), Is.EqualTo(0));
         }
     }
 }
