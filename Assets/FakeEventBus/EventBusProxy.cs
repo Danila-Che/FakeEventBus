@@ -1,6 +1,5 @@
 using System;
 using UnityEngine;
-using UnityEngine.Pool;
 
 namespace FakeEventBus
 {
@@ -40,82 +39,32 @@ namespace FakeEventBus
 
 		public static void RegisterSingle(GameObject gameObject)
 		{
-			if (gameObject.TryGetComponent<MonoBehaviour>(out var monoBehaviour))
-			{
-				m_Instance.Value.Register(monoBehaviour);
-			}
+			EventBusUtilities.RegisterSingle(gameObject, m_Instance.Value);
 		}
 
 		public static void RegisterObject(GameObject gameObject)
 		{
-			using var pooledObject = ListPool<MonoBehaviour>.Get(out var monoBehaviours);
-			gameObject.GetComponents(monoBehaviours);
-
-			for (int i = 0; i < monoBehaviours.Count; i++)
-			{
-				var monoBehaviour = monoBehaviours[i];
-
-				if (monoBehaviour != null)
-				{
-					m_Instance.Value.Register(monoBehaviour);
-				}
-			}
+			EventBusUtilities.RegisterObject(gameObject, m_Instance.Value);
 		}
 
 		public static void RegisterRecursive(GameObject gameObject)
 		{
-			using var pooledObject = ListPool<MonoBehaviour>.Get(out var monoBehaviours);
-			gameObject.GetComponentsInChildren(includeInactive: true, monoBehaviours);
-
-			for (int i = 0; i < monoBehaviours.Count; i++)
-			{
-				var monoBehaviour = monoBehaviours[i];
-
-				if (monoBehaviour != null)
-				{
-					m_Instance.Value.Register(monoBehaviour);
-				}
-			}
+			EventBusUtilities.RegisterRecursive(gameObject, m_Instance.Value);
 		}
 
 		public static void UnregisterSingle(GameObject gameObject)
 		{
-			if (gameObject.TryGetComponent<MonoBehaviour>(out var monoBehaviour))
-			{
-				m_Instance.Value.Unregister(monoBehaviour);
-			}
+			EventBusUtilities.UnregisterSingle(gameObject, m_Instance.Value);
 		}
 
 		public static void UnregisterObject(GameObject gameObject)
 		{
-			using var pooledObject = ListPool<MonoBehaviour>.Get(out var monoBehaviours);
-			gameObject.GetComponents(monoBehaviours);
-
-			for (int i = 0; i < monoBehaviours.Count; i++)
-			{
-				var monoBehaviour = monoBehaviours[i];
-
-				if (monoBehaviour != null)
-				{
-					m_Instance.Value.Unregister(monoBehaviour);
-				}
-			}
+			EventBusUtilities.UnregisterObject(gameObject, m_Instance.Value);
 		}
 
 		public static void UnregisterRecursive(GameObject gameObject)
 		{
-			using var pooledObject = ListPool<MonoBehaviour>.Get(out var monoBehaviours);
-			gameObject.GetComponentsInChildren(includeInactive: true, monoBehaviours);
-
-			for (int i = 0; i < monoBehaviours.Count; i++)
-			{
-				var monoBehaviour = monoBehaviours[i];
-
-				if (monoBehaviour != null)
-				{
-					m_Instance.Value.Unregister(monoBehaviour);
-				}
-			}
+			EventBusUtilities.UnregisterRecursive(gameObject, m_Instance.Value);
 		}
 	}
 }

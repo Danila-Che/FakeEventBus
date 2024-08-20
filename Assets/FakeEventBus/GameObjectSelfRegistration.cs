@@ -21,43 +21,53 @@ namespace FakeEventBus
         {
             if (m_WasRegistered) { return; }
 
-            switch (m_RegistrationStrategy)
-            {
-                case RegistrationStrategy.Single:
-                    EventBusProxy.RegisterSingle(gameObject);
-                    break;
-                case RegistrationStrategy.Object:
-                    EventBusProxy.RegisterObject(gameObject);
-                    break;
-                case RegistrationStrategy.Recursive:
-                    EventBusProxy.RegisterRecursive(gameObject);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
-            }
+            Register();
 
-            m_LastRegistrationStrategy = m_RegistrationStrategy;
+			m_LastRegistrationStrategy = m_RegistrationStrategy;
             m_WasRegistered = true;
         }
 
         private void OnDisable()
         {
-            switch (m_LastRegistrationStrategy)
-            {
-                case RegistrationStrategy.Single:
-                    EventBusProxy.UnregisterSingle(gameObject);
-                    break;
-                case RegistrationStrategy.Object:
-                    EventBusProxy.UnregisterObject(gameObject);
-                    break;
-                case RegistrationStrategy.Recursive:
-                    EventBusProxy.UnregisterRecursive(gameObject);
-                    break;
-                default:
-                    throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
-            }
+			Unregister();
 
-            m_WasRegistered = false;
+			m_WasRegistered = false;
         }
+
+        protected virtual void Register()
+        {
+			switch (m_RegistrationStrategy)
+			{
+				case RegistrationStrategy.Single:
+					EventBusProxy.RegisterSingle(gameObject);
+					break;
+				case RegistrationStrategy.Object:
+					EventBusProxy.RegisterObject(gameObject);
+					break;
+				case RegistrationStrategy.Recursive:
+					EventBusProxy.RegisterRecursive(gameObject);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
+			}
+		}
+
+        protected virtual void Unregister()
+        {
+			switch (m_LastRegistrationStrategy)
+			{
+				case RegistrationStrategy.Single:
+					EventBusProxy.UnregisterSingle(gameObject);
+					break;
+				case RegistrationStrategy.Object:
+					EventBusProxy.UnregisterObject(gameObject);
+					break;
+				case RegistrationStrategy.Recursive:
+					EventBusProxy.UnregisterRecursive(gameObject);
+					break;
+				default:
+					throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
+			}
+		}
     }
 }
