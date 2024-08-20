@@ -3,15 +3,15 @@ using UnityEngine;
 
 namespace FakeEventBus
 {
+    public enum RegistrationStrategy
+    {
+        Single,
+        Object,
+        Recursive
+    }
+
     public class GameObjectSelfRegistration : MonoBehaviour
     {
-        private enum RegistrationStrategy
-        {
-            Single,
-            Object,
-            Recursive
-        }
-
         [SerializeField] private RegistrationStrategy m_RegistrationStrategy = RegistrationStrategy.Recursive;
 
         private RegistrationStrategy m_LastRegistrationStrategy;
@@ -21,7 +21,7 @@ namespace FakeEventBus
         {
             if (m_WasRegistered) { return; }
 
-            Register();
+            Register(m_RegistrationStrategy);
 
 			m_LastRegistrationStrategy = m_RegistrationStrategy;
             m_WasRegistered = true;
@@ -29,14 +29,14 @@ namespace FakeEventBus
 
         private void OnDisable()
         {
-			Unregister();
+			Unregister(m_RegistrationStrategy);
 
 			m_WasRegistered = false;
         }
 
-        protected virtual void Register()
+        protected virtual void Register(RegistrationStrategy registrationStrategy)
         {
-			switch (m_RegistrationStrategy)
+			switch (registrationStrategy)
 			{
 				case RegistrationStrategy.Single:
 					EventBusProxy.RegisterSingle(gameObject);
@@ -48,13 +48,13 @@ namespace FakeEventBus
 					EventBusProxy.RegisterRecursive(gameObject);
 					break;
 				default:
-					throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
+					throw new ArgumentOutOfRangeException(registrationStrategy.ToString());
 			}
 		}
 
-        protected virtual void Unregister()
+        protected virtual void Unregister(RegistrationStrategy registrationStrategy)
         {
-			switch (m_LastRegistrationStrategy)
+			switch (registrationStrategy)
 			{
 				case RegistrationStrategy.Single:
 					EventBusProxy.UnregisterSingle(gameObject);
@@ -66,7 +66,7 @@ namespace FakeEventBus
 					EventBusProxy.UnregisterRecursive(gameObject);
 					break;
 				default:
-					throw new ArgumentOutOfRangeException(m_RegistrationStrategy.ToString());
+					throw new ArgumentOutOfRangeException(registrationStrategy.ToString());
 			}
 		}
     }
