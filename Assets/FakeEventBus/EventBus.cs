@@ -113,14 +113,19 @@ namespace FakeEventBus
 		{
 			Monitor.Enter(s_Lock);
 
-			if (m_ObserverBindings.TryGetValue(typeof(T), out var bindings))
+			try
 			{
-				return bindings.CallbackCount;
+				if (m_ObserverBindings.TryGetValue(typeof(T), out var bindings))
+				{
+					return bindings.CallbackCount;
+				}
+
+				return 0;
 			}
-
-			Monitor.Exit(s_Lock);
-
-			return 0;
+			finally
+			{
+				Monitor.Exit(s_Lock);
+			}
 		}
 
 		public void Clear(bool includeCache = false)
